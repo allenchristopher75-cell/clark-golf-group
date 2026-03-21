@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Clark Group Golf</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #1a6b3c;
+    --green-light: #e8f4ee;
+    --green-mid: #2d8a52;
+    --text: #1c1c1c;
+    --text-muted: #6b6b6b;
+    --text-hint: #999;
+    --border: rgba(0,0,0,0.10);
+    --border-med: rgba(0,0,0,0.18);
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+  .page-header { background: var(--green); color: white; padding: 2rem 1.5rem 1.5rem; position: relative; overflow: hidden; }
+  .page-header::after { content: '⛳'; position: absolute; right: 1.5rem; top: 50%; transform: translateY(-50%); font-size: 64px; opacity: 0.15; }
+  .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 4px; }
+  .page-header p { font-size: 13px; opacity: 0.75; font-weight: 300; }
+  .main { max-width: 600px; margin: 0 auto; padding: 1.25rem 1rem 5rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 1.25rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.9rem 1rem; }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 4px; }
+  .stat-val { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--green); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.1rem 1.25rem; margin-bottom: 1.25rem; }
+  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 12px; font-weight: 500; }
+  .upload-zone { border: 1.5px dashed var(--border-med); border-radius: var(--radius); padding: 2rem 1rem; text-align: center; cursor: pointer; transition: background 0.15s; }
+  .upload-zone:hover, .upload-zone:active { background: var(--green-light); border-color: var(--green-mid); }
+  .upload-zone input { display: none; }
+  .uz-icon { font-size: 32px; margin-bottom: 8px; }
+  .uz-main { font-size: 15px; font-weight: 500; }
+  .uz-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .preview-img-wrap { border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border); }
+  .preview-img-wrap img { width: 100%; display: block; }
+  .btn { width: 100%; padding: 12px; border: 1px solid var(--border-med); border-radius: var(--radius); background: transparent; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; margin-bottom: 8px; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+  .btn:hover { background: var(--bg); }
+  .btn-confirm { background: var(--green); border-color: var(--green); color: white; }
+  .btn-confirm:hover { background: var(--green-mid); }
+  .processing { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); padding: 12px 0; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border-med); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .result-box { background: var(--green-light); border: 1px solid rgba(26,107,60,0.2); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
+  .result-date { font-size: 13px; font-weight: 500; color: var(--green); margin-bottom: 8px; }
+  .name-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .name-tag { background: white; border: 1px solid rgba(26,107,60,0.2); border-radius: 20px; padding: 3px 10px 3px 10px; font-size: 12px; color: var(--text); display: inline-flex; align-items: center; gap: 5px; }
+  .name-tag-edit { background: none; border: none; cursor: pointer; font-size: 11px; color: var(--green); padding: 0; font-family: 'DM Sans', sans-serif; text-decoration: underline; }
+  .name-edit-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+  .name-edit-input { flex: 1; font-size: 13px; padding: 5px 9px; border: 1px solid var(--green-mid); border-radius: 20px; font-family: 'DM Sans', sans-serif; outline: none; color: var(--text); }
+  .name-edit-save { background: var(--green); color: white; border: none; border-radius: 20px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .name-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .cancel-link { font-size: 12px; color: var(--text-muted); cursor: pointer; text-decoration: underline; display: block; text-align: center; margin-top: 4px; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+  .tab { flex: 1; padding: 9px 8px; font-size: 13px; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: 'DM Sans', sans-serif; background: none; border-top: none; border-left: none; border-right: none; text-align: center; }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 500; }
+  .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-input { flex: 1; min-width: 120px; font-size: 13px; padding: 8px 11px; border: 1px solid var(--border-med); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; }
+  .search-input:focus { border-color: var(--green-mid); }
+  .icon-btn { padding: 8px 12px; border: 1px solid var(--border-med); border-radius: var(--radius); background: transparent; font-size: 12px; color: var(--text-muted); cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; transition: all 0.15s; }
+  .icon-btn:hover { background: var(--green-light); color: var(--green); border-color: rgba(26,107,60,0.3); }
+  .player-table { width: 100%; border-collapse: collapse; }
+  .player-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 400; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .player-table th.r { text-align: right; }
+  .player-table td { font-size: 14px; color: var(--text); padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  .player-table td.r { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--green); }
+  .player-table td.muted { color: var(--text-hint); font-size: 12px; width: 28px; }
+  .player-table tr:last-child td { border-bottom: none; }
+  .player-table tr.clickable { cursor: pointer; }
+  .player-table tr.clickable:hover td { background: var(--green-light); }
+  .bar-wrap { display: flex; align-items: center; }
+  .bar { height: 5px; border-radius: 3px; background: var(--green-mid); opacity: 0.5; min-width: 4px; }
+  .round-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .round-row:last-child { border-bottom: none; }
+  .round-row .rd { color: var(--text-muted); }
+  .round-row .rc { font-weight: 500; }
+  .lookup-input-wrap { margin-bottom: 12px; }
+  .lookup-input-wrap input { width: 100%; font-size: 14px; padding: 10px 12px; border: 1px solid var(--border-med); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; }
+  .lookup-input-wrap input:focus { border-color: var(--green-mid); }
+  .lookup-player { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+  .lookup-player:hover { background: var(--green-light); border-color: rgba(26,107,60,0.25); }
+  .lookup-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .lookup-sub { font-size: 12px; color: var(--text-muted); }
+  .empty-state { text-align: center; padding: 2.5rem 1rem; font-size: 14px; color: var(--text-muted); }
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 1.5rem; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; width: 100%; max-width: 400px; animation: modalIn 0.18s ease; }
+  @keyframes modalIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+  .modal-name { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; padding: 2px; }
+  .modal-rounds { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+  .modal-rounds strong { color: var(--green); font-size: 22px; font-family: 'DM Serif Display', serif; font-weight: 400; }
+  .modal-dates-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 8px; }
+  .date-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .date-chip { background: var(--green-light); border: 1px solid rgba(26,107,60,0.2); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--green); }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: white; border-radius: var(--radius); padding: 10px 20px; font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; max-width: 90vw; text-align: center; }
+  .toast.show { opacity: 1; }
+  .loading-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; z-index: 500; }
+  .loading-screen p { font-size: 14px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner" style="width:24px;height:24px;border-width:3px;"></div>
+  <p>Loading Clark Group Golf...</p>
+</div>
+
+<div class="page-header">
+  <h1>Clark Group Golf</h1>
+  <p>Upload a roster photo — Claude reads the date and names automatically</p>
+</div>
+
+<div class="main">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Players</div><div class="stat-val" id="stat-players">0</div></div>
+    <div class="stat-card"><div class="stat-label">Rounds</div><div class="stat-val" id="stat-rounds">0</div></div>
+    <div class="stat-card"><div class="stat-label">Top rounds</div><div class="stat-val" id="stat-top">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Log a round</div>
+    <div id="step-upload">
+      <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" accept="image/*" capture="environment" onchange="handleFile(event)" />
+        <div class="uz-icon">📷</div>
+        <div class="uz-main">Tap to upload roster photo</div>
+        <div class="uz-sub">Make sure the date is written at the top</div>
+      </div>
+    </div>
+    <div id="step-preview" style="display:none;">
+      <div class="preview-img-wrap"><img id="preview-img" src="" alt="Roster" /></div>
+      <button class="btn" onclick="extractNames()">Read names &amp; date from photo →</button>
+      <span class="cancel-link" onclick="resetUpload()">Cancel</span>
+    </div>
+    <div id="step-processing" style="display:none;">
+      <div class="processing"><div class="spinner"></div><span id="processing-msg">Reading roster photo...</span></div>
+    </div>
+    <div id="step-confirm" style="display:none;">
+      <div class="result-box">
+        <div class="result-date" id="result-date"></div>
+        <div class="name-tags" id="result-names"></div>
+        <div class="name-hint">Tap "edit" next to any name to correct it before saving</div>
+      </div>
+      <button class="btn btn-confirm" onclick="confirmRound()">Confirm &amp; save this round</button>
+      <span class="cancel-link" onclick="resetUpload()">Cancel / re-upload</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0;">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('standings')">Standings</button>
+      <button class="tab" onclick="showTab('history')">History</button>
+      <button class="tab" onclick="showTab('lookup')">Lookup</button>
+    </div>
+    <div id="tab-standings">
+      <div class="toolbar">
+        <input type="text" class="search-input" id="search-input" placeholder="Search players..." oninput="renderStandings()" />
+        <button class="icon-btn" id="sort-btn" onclick="toggleSort()">Rounds ↓</button>
+        <button class="icon-btn" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div id="standings-wrap"></div>
+    </div>
+    <div id="tab-history" style="display:none;"><div id="history-wrap"></div></div>
+    <div id="tab-lookup" style="display:none;">
+      <div class="lookup-input-wrap">
+        <input type="text" id="lookup-input" placeholder="Type a player name..." oninput="renderLookup()" />
+      </div>
+      <div id="lookup-results"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="player-modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-name" id="modal-name"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-rounds"><strong id="modal-count"></strong> rounds played</div>
+    <div class="modal-dates-label">Dates played</div>
+    <div class="date-chips" id="modal-dates"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ANTHROPIC_KEY = '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';
+const SUPABASE_URL = 'https://vkwtlyphgwsiwxfhkukp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_R30wkE7wGc37-CFk5Q4YEg_RGptK_KP';
+
+let players = {};
+let rounds = [];
+let sortBy = 'rounds';
+let pendingNames = [], pendingDate = '';
+
+async function sbFetch(path, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Prefer': method==='POST' ? 'return=representation' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  return res.status === 204 ? null : res.json();
+}
+
+async function loadData() {
+  try {
+    const [p, r] = await Promise.all([
+      sbFetch('players?select=*&order=rounds.desc'),
+      sbFetch('rounds?select=*&order=date.desc')
+    ]);
+    players = {};
+    (p||[]).forEach(pl => { players[pl.player_key] = pl; });
+    rounds = r || [];
+    updateStats();
+    renderStandings();
+    renderHistory();
+  } catch(e) {
+    showToast('Could not load data — check connection');
+  } finally {
+    document.getElementById('loading-screen').style.display = 'none';
+  }
+}
+
+function handleFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { document.getElementById('preview-img').src = ev.target.result; showStep('step-preview'); };
+  reader.readAsDataURL(file);
+}
+
+function showStep(id) {
+  ['step-upload','step-preview','step-processing','step-confirm'].forEach(s => {
+    document.getElementById(s).style.display = s===id ? 'block' : 'none';
+  });
+}
+
+async function extractNames() {
+  const imgSrc = document.getElementById('preview-img').src;
+  const base64 = imgSrc.split(',')[1];
+  const mediaType = imgSrc.split(';')[0].split(':')[1];
+  showStep('step-processing');
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'text', text: 'This is a printed golf group roster with a date written at the top. Extract the date and all player names. Return ONLY valid JSON: {"date":"YYYY-MM-DD","names":["Name One","Name Two"]}. Convert date to YYYY-MM-DD. No markdown, no explanation.' }
+        ]}]
+      })
+    });
+    const data = await res.json();
+    if (data.error) { showToast('API error: ' + data.error.message); showStep('step-preview'); return; }
+    const text = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(text);
+    if (!parsed.names||!parsed.names.length) { showToast('No names found — try a clearer photo'); showStep('step-preview'); return; }
+    pendingNames = parsed.names;
+    pendingDate = parsed.date || new Date().toISOString().split('T')[0];
+    document.getElementById('result-date').textContent = formatDate(pendingDate) + ' — ' + parsed.names.length + ' players';
+    renderNameTags();
+    showStep('step-confirm');
+  } catch(err) {
+    showToast('Could not read photo — please try again');
+    showStep('step-preview');
+  }
+}
+
+function renderNameTags() {
+  document.getElementById('result-names').innerHTML = pendingNames.map((n,i) =>
+    `<span class="name-tag">${n} <button class="name-tag-edit" onclick="startEdit(${i})">edit</button></span>`
+  ).join('');
+}
+
+function startEdit(i) {
+  const wrap = document.getElementById('result-names');
+  const current = pendingNames[i];
+  wrap.innerHTML = `
+    <div class="name-edit-row">
+      <input class="name-edit-input" id="edit-input-${i}" value="${current}" />
+      <button class="name-edit-save" onclick="saveEdit(${i})">Save</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Editing: <strong>${current}</strong></div>
+  `;
+  document.getElementById('edit-input-'+i).focus();
+  document.getElementById('edit-input-'+i).select();
+}
+
+function saveEdit(i) {
+  const val = document.getElementById('edit-input-'+i).value.trim();
+  if (val) pendingNames[i] = val;
+  renderNameTags();
+}
+
+async function confirmRound() {
+  if (rounds.find(r=>r.date===pendingDate)) { showToast('A round for this date is already saved'); return; }
+  showStep('step-processing');
+  document.getElementById('processing-msg').textContent = 'Saving round...';
+  try {
+    await sbFetch('rounds', 'POST', { date: pendingDate, names: pendingNames, player_count: pendingNames.length });
+    for (const name of pendingNames) {
+      const key = name.trim().toLowerCase().replace(/\s+/g,' ');
+      const existing = players[key];
+      if (existing) {
+        const newDates = [...(existing.dates||[]), pendingDate];
+        await sbFetch('players?player_key=eq.'+encodeURIComponent(key), 'PATCH', { rounds: existing.rounds+1, dates: newDates });
+        players[key] = {...existing, rounds: existing.rounds+1, dates: newDates};
+      } else {
+        const newPlayer = { player_key: key, name: name.trim(), rounds: 1, dates: [pendingDate] };
+        await sbFetch('players', 'POST', newPlayer);
+        players[key] = newPlayer;
+      }
+    }
+    rounds.unshift({ date: pendingDate, names: pendingNames, player_count: pendingNames.length });
+    updateStats(); renderStandings(); renderHistory();
+    showToast('Saved — ' + pendingNames.length + ' players on ' + formatDate(pendingDate));
+    resetUpload();
+  } catch(err) {
+    showToast('Error saving — please try again');
+    showStep('step-confirm');
+  }
+}
+
+function resetUpload() {
+  pendingNames=[]; pendingDate='';
+  document.getElementById('file-input').value='';
+  document.getElementById('processing-msg').textContent = 'Reading roster photo...';
+  showStep('step-upload');
+}
+
+function updateStats() {
+  const p = Object.values(players);
+  document.getElementById('stat-players').textContent = p.length;
+  document.getElementById('stat-rounds').textContent = rounds.length;
+  const top = [...p].sort((a,b)=>b.rounds-a.rounds)[0];
+  document.getElementById('stat-top').textContent = top ? top.rounds : '—';
+}
+
+function toggleSort() {
+  sortBy = sortBy==='rounds'?'name':'rounds';
+  document.getElementById('sort-btn').textContent = sortBy==='rounds'?'Rounds ↓':'Name A–Z';
+  renderStandings();
+}
+
+function renderStandings() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  let p = Object.values(players);
+  if (search) p = p.filter(pl=>pl.name.toLowerCase().includes(search));
+  if (sortBy==='rounds') p.sort((a,b)=>b.rounds-a.rounds||a.name.localeCompare(b.name));
+  else p.sort((a,b)=>a.name.localeCompare(b.name));
+  const maxR = Math.max(...p.map(pl=>pl.rounds),1);
+  const wrap = document.getElementById('standings-wrap');
+  if (!p.length) { wrap.innerHTML='<div class="empty-state">No players yet — upload a roster to get started</div>'; return; }
+  wrap.innerHTML = `<table class="player-table"><thead><tr><th></th><th>Player</th><th></th><th class="r">Rounds</th></tr></thead><tbody>` +
+    p.map((pl,i)=>`<tr class="clickable" onclick="openModal('${encodeURIComponent(pl.player_key)}')">
+      <td class="muted">${i+1}</td><td>${pl.name}</td>
+      <td><div class="bar-wrap"><div class="bar" style="width:${Math.round((pl.rounds/maxR)*80)+4}px;"></div></div></td>
+      <td class="r">${pl.rounds}</td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+
+function renderHistory() {
+  const wrap = document.getElementById('history-wrap');
+  if (!rounds.length) { wrap.innerHTML='<div class="empty-state">No rounds logged yet</div>'; return; }
+  wrap.innerHTML = rounds.map(r=>`<div class="round-row"><span class="rd">${formatDate(r.date)}</span><span class="rc">${r.player_count||r.names&&r.names.length||0} players</span></div>`).join('');
+}
+
+function renderLookup() {
+  const q = document.getElementById('lookup-input').value.toLowerCase().trim();
+  const wrap = document.getElementById('lookup-results');
+  if (!q) { wrap.innerHTML=''; return; }
+  const matches = Object.values(players).filter(p=>p.name.toLowerCase().includes(q));
+  if (!matches.length) { wrap.innerHTML='<div class="empty-state">No players found</div>'; return; }
+  matches.sort((a,b)=>b.rounds-a.rounds);
+  wrap.innerHTML = matches.map(p=>`<div class="lookup-player" onclick="openModal('${encodeURIComponent(p.player_key)}')">
+    <div class="lookup-name">${p.name}</div>
+    <div class="lookup-sub">${p.rounds} round${p.rounds!==1?'s':''} played</div>
+  </div>`).join('');
+}
+
+function openModal(encodedKey) {
+  const k = decodeURIComponent(encodedKey);
+  const p = players[k]; if (!p) return;
+  document.getElementById('modal-name').textContent = p.name;
+  document.getElementById('modal-count').textContent = p.rounds;
+  const sorted = [...(p.dates||[])].sort((a,b)=>b.localeCompare(a));
+  document.getElementById('modal-dates').innerHTML = sorted.map(d=>`<span class="date-chip">${formatDate(d)}</span>`).join('') || '<span style="font-size:13px;color:var(--text-muted);">No dates recorded</span>';
+  document.getElementById('player-modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target.classList.contains('modal-backdrop')) document.getElementById('player-modal').classList.remove('open');
+}
+
+function exportCSV() {
+  const p = Object.values(players).sort((a,b)=>b.rounds-a.rounds);
+  if (!p.length) { showToast('No data to export yet'); return; }
+  const rows = [['Rank','Player','Total Rounds','Dates Played']];
+  p.forEach((pl,i) => { rows.push([i+1, pl.name, pl.rounds, [...(pl.dates||[])].sort().map(formatDate).join(' | ')]); });
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='clark_group_standings.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported clark_group_standings.csv');
+}
+
+function showTab(tab) {
+  ['standings','history','lookup'].forEach((t,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
+  });
+}
+
+function formatDate(d) {
+  try { const [y,m,day]=d.split('-'); const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return mo[parseInt(m)-1]+' '+parseInt(day)+', '+y; } catch(e){return d;}
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+loadData();
+</script>
+</body>
+</html>
