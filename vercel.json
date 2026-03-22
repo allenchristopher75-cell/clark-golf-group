@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/read-roster.js": {
-      "runtime": "edge"
-    }
-  }
-}
