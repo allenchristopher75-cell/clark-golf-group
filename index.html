@@ -298,7 +298,13 @@ async function extractNames() {
     });
     const ocrData = await ocrRes.json();
     if (!ocrData.ParsedResults || !ocrData.ParsedResults[0]) {
-      showToast('Could not read photo — try a clearer image');
+      const errMsg = ocrData.ErrorMessage || ocrData.OCRExitCode || JSON.stringify(ocrData).slice(0,200);
+      showToast('OCR error: ' + errMsg);
+      showStep('step-preview');
+      return;
+    }
+    if (ocrData.ParsedResults[0].ErrorMessage) {
+      showToast('OCR error: ' + ocrData.ParsedResults[0].ErrorMessage);
       showStep('step-preview');
       return;
     }
