@@ -345,7 +345,7 @@ async function extractNames() {
     renderNameTags();
     showStep('step-confirm');
   } catch(err) {
-    showToast('Could not read photo — please try again');
+    showToast('Error: ' + err.message);
     showStep('step-preview');
   }
 }
