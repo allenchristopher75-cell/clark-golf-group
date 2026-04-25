@@ -350,6 +350,7 @@ function saveEdit(i) {
 }
 
 async function confirmRound() {
+  if (!pendingNames.length) { showToast('No players — add at least one name before saving'); return; }
   if (rounds.find(r=>r.date===pendingDate)) { showToast('A round for this date is already saved'); return; }
   showStep('step-processing');
   document.getElementById('processing-msg').textContent = 'Saving round...';
@@ -439,6 +440,7 @@ function renderHistory() {
         <div style="display:flex;gap:8px;align-items:center;">
           <span class="rc">${r.player_count||r.names&&r.names.length||0} players</span>
           <button class="name-tag-edit" style="font-size:12px;" onclick="editRound('${r.date}')">Edit</button>
+          <button class="name-tag-edit" style="font-size:12px;color:#c0392b;" onclick="deleteRound('${r.date}')">Delete</button>
         </div>
       </div>
       <div style="font-size:12px;color:var(--text-muted);">${(r.names||[]).join(', ')}</div>
@@ -509,6 +511,33 @@ async function saveEditedRound() {
     showToast('Round updated successfully');
   } catch(e) {
     showToast('Error saving — please try again');
+  }
+}
+
+async function deleteRound(date) {
+  if (!confirm('Delete the round on ' + formatDate(date) + '? This cannot be undone.')) return;
+  try {
+    await sbFetch('rounds?date=eq.'+date, 'DELETE');
+    const deleted = rounds.find(r => r.date === date);
+    const affectedNames = deleted ? (deleted.names || []) : [];
+    rounds = rounds.filter(r => r.date !== date);
+    for (const name of affectedNames) {
+      const key = name.trim().toLowerCase();
+      const remainingDates = rounds
+        .filter(r => (r.names||[]).map(n=>n.trim().toLowerCase()).includes(key))
+        .map(r => r.date);
+      if (remainingDates.length > 0) {
+        await sbFetch('players?player_key=eq.'+encodeURIComponent(key), 'PATCH', { rounds: remainingDates.length, dates: remainingDates });
+        if (players[key]) players[key] = {...players[key], rounds: remainingDates.length, dates: remainingDates};
+      } else {
+        await sbFetch('players?player_key=eq.'+encodeURIComponent(key), 'DELETE');
+        delete players[key];
+      }
+    }
+    updateStats(); renderStandings(); renderHistory();
+    showToast('Round deleted');
+  } catch(e) {
+    showToast('Error deleting round — please try again');
   }
 }
 
