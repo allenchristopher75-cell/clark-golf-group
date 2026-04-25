@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const { base64, mediaType } = req.body;
 
-    const apiKey = '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';
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
